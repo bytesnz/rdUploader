@@ -1,0 +1,91 @@
+[
+  {
+    "name": {
+      "en": "Video Uploader"
+    },
+    "description": {
+      "en": "Upload videos to have them uploaded onto Youtube"
+    },
+    "fields": {
+      "name": {
+        "type": "string",
+        "label": {
+          "en": "Video Name"
+        },
+        "required": true
+      },
+      "description": {
+        "type": "string",
+        "label": {
+          "en": "Video Description"
+        }
+      },
+      "tags": {
+        "type": "tag",
+        "label": {
+          "en": "Tags"
+        },
+        "multiple": true
+      },
+      "video": {
+        "type": "file",
+        "label": {
+          "en": "video File"
+        },
+        "required": true,
+        "mime": "video/.*"
+      }
+    },
+    "processor": "youtubeVideo"
+  },
+  {
+    "name": {
+      "en": "Sustainable Living Data Upload"
+    },
+    "description": {
+      "en": "Use this form to upload a spreadsheet containing SL catch or effort data"
+    },
+    "fields": {
+      "name": {
+        "type": "string",
+        "label": {
+          "en": "Your Name"
+        },
+        "description": {
+          "en": "Your first name and last initial"
+        },
+        "required": true
+      },
+      "type": {
+        "type": "",
+        "label": {
+          "en": "Type of Data"
+        },
+        "required": true
+      },
+      "village": {
+        "type": "",
+        "label": {
+          "en": "Village the Data is For"
+        },
+        "required": true
+      },
+      "date": {
+        "type": "date",
+        "label": {
+          "en": "Date the Data is For"
+        },
+        "required": true
+      },
+      "file": {
+        "type": "file",
+        "label": {
+          "en": "Data Spreadsheet"
+        },
+        "required": true,
+        "extension": "xlsx"
+      }
+    },
+    "processor": "slData"
+  }
+]

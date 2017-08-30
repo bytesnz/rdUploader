@@ -1,0 +1,58 @@
+form {
+  max-width: 500px;
+  margin: 0 auto;
+
+  label {
+    display: block;
+    margin-bottom: 1.5em;
+
+    input, select, textarea {
+      display: block;
+      width: 100%;
+      margin: 0.5em 0;
+      border: none;
+      background-color: transparent;
+      box-shadow: none;
+      border-bottom: solid 1px #000;
+
+      &:invalid {
+        border-bottom-color: #ff0000;
+      }
+    }
+
+    div.select {
+      position: relative;
+
+      select {
+        appearance: none;
+      }
+
+      &:after {
+        font-family: 'FontAwesome';
+        content: '\f103';
+        color: #CCC;
+        position: absolute;
+        right: 5px;
+        top: 2px;
+      }
+    }
+
+    input[type=checkbox], input[type=radio], input[type=file] {
+      display: inline;
+      border: none;
+    }
+
+    span {
+      display: block;
+      font-size: 70%;
+    }
+  }
+
+  .react-datepicker-wrapper {
+    display: block;
+
+    .react-datepicker__input-container {
+      display: block;
+    }
+  }
+}

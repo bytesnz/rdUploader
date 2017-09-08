@@ -6,6 +6,7 @@ const villages = {
   AMB: 'Ambolomailake',
   AND: 'Andrevo',
   BE: 'Beravy',
+  BL: 'Belitsake',
   IF: 'Ifaty'
 };
 

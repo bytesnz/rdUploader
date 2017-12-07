@@ -4,37 +4,65 @@ const app = express();
 const server = require('http').Server(app);
 const fs = require('fs');
 const path = require('path');
+const xlsx = require('xlsx');
+const Magic = require('mmmagic').Magic;
+const slDataDataPaths = require('./forms/sldata').dataPaths;
+const ejs = require('ejs');
+const ReactDOMServer = require('react-dom/server');
+
+const RDHeader = require('rd-base').RDHeader;
+const template = require('rd-base/template').template;
 
 const appRoot = path.join(__dirname, './app');
 
 const multerStorage = multer.memoryStorage()
 const multerUpload = multer({ storage: multerStorage });
 
-const dataPath = '/data/data';
+const dataPath = '/shares/data';
 
-const errorPage = (errorHtml) => `<!doctype HTML>
-<html>
-  <head>
-    <title>Upload Error</title>
-  </head>
-  <body>
-    <h1>The following errors occurred</h1>
-    ${errorHtml}
-  </body>
-</html>`;
+const errorPage = (errorHtml) => template({
+  header,
+  footer: '',
+  page: {
+    title: 'Upload Error',
+    body: `
+      <main>
+        <h1>Error Uploading</h1>
+        <p>The following errors occurred</p>
+        ${errorHtml}
+        <p>Please go back, fix the errors and try again</p>
+      </main>
+    `
+  }
+});
 
 const uploadTypes = {
-  catch: (params, add) => path.join(dataPath, 'fisheries/Catch data/Entered to check/', `${params.type} ${params.village} ${params.date} ${params.name}${add}.xlsx`),
-  effort: (params, add) => path.join(dataPath, 'fisheries/Effort data/Entered to check/', `${params.type} ${params.village} ${params.date} ${params.name}${add}.xlsx`)
+  catch: (params, add) => path.join(dataPath, slDataDataPaths.catch, `${params.type} ${params.village} ${params.date} ${params.name}${add}.xlsx`),
+  effort: (params, add) => path.join(dataPath, slDataDataPaths.effort, `${params.type} ${params.village} ${params.date} ${params.name}${add}.xlsx`)
 };
 
 console.log(`Web root is ${appRoot}`);
 app.use('/', express.static(appRoot));
 
+const magic = new Magic();
+
+// Render templates
+const header = ReactDOMServer.renderToStaticMarkup(RDHeader());
+
 app.post('/', multerUpload.single('file'), (req, res, next) => {
   let date;
 
   let errors = [];
+
+  const printErrors = () => {
+    let errorHtml = errors.reduce((html, error) => {
+      return `${html}<li>${error}</li>`;
+    }, '');
+
+    res.send(errorPage(`<ul>${errorHtml}</ul>`));
+
+    next();
+  };
 
   // Check have all the required data
   if (!req.body.name) {
@@ -53,19 +81,33 @@ app.post('/', multerUpload.single('file'), (req, res, next) => {
     errors.push('The date the data is for is required');
   }
 
-  if (!req.file || req.file.mimetype !== 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet') {
-    errors.push('A file containing the data is required and must be in Microsoft Office 2007 format');
+  if (!req.file) {
+    errors.push('A file containing the data to upload must be given');
   }
 
   if (errors.length) {
-    let errorHtml = errors.reduce((html, error) => {
-      return `${html}<li>${error}</li>`;
-    }, '');
+    return printErrors();
+  }
 
-    res.send(errorPage(`<ul>${errorHtml}</ul>`));
+  magic.detect(req.file.buffer, function (error, result) {
+    if (error) {
+      errors.push('Error detecting mime type of given file');
+    } else {
+      if (result !== 'Microsoft OOXML') {
+        errors.push('The file must be in Microsoft Office Excel 2007+ format (xlsx)');
+      } else {
+        try {
+          xlsx.read(req.file.buffer, { type: 'buffer' });
+        } catch (err) {
+          errors.push('Could not parse the given file: ' + err.message);
+        }
+      }
+    }
 
-    next();
-  } else {
+    if (errors.length) {
+      return printErrors();
+    }
+
     let attempts;
     for (attempts = 0; attempts < 5; attempts++) {
       let add = '';
@@ -85,19 +127,30 @@ app.post('/', multerUpload.single('file'), (req, res, next) => {
         if (error.code !== 'ENOENT') {
           res.send(errorPage('<p>There was an error determining if the file already exists. Please try again</p>'));
         } else {
-          fs.writeFileSync(fileName, req.file.buffer);
+          try {
+            fs.writeFileSync(fileName, req.file.buffer);
 
-          console.log(`Saved file ${fileName}`);
-          res.send(`<!doctype HTML>
-<html>
-  <head>
-    <title>Upload Successful</title>
-  </head>
-  <body>
-    <h1>Upload Successful</h1<
-  </body>
-</html>
-`);
+            console.log(`Saved file ${fileName}`);
+
+            res.send(template({
+              header,
+              footer: '',
+              page: {
+                title: 'Upload Successful',
+                body: `
+                  <main>
+                    <h1>Upload Successful</h1>
+                    <p>
+                      Your file should now be uploaded to
+                      <a href="//data.rd/${req.body.destination}">data.rd</a>
+                    </p>
+                  </main>
+                `
+              }
+            }));
+          } catch(error) {
+            res.send(errorPage(`<p>There was an error saving the file: ${error.message}</p>`));
+          }
         }
 
         break;
@@ -107,9 +160,9 @@ app.post('/', multerUpload.single('file'), (req, res, next) => {
     if (attempts === 5) {
       res.send(errorPage('<p>Could not upload as there are already 5 copies of the same file</p>'));
     }
-  }
 
-  next();
+    next();
+  });
 
 });
 

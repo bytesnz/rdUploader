@@ -5,7 +5,7 @@
  * Created by Jack Farley (bytesnz) 2017-08-23
  */
 import './style.scss';
-import 'rd-base/style.scss';
+import 'rd-base/dist/assets/style.css';
 
 import * as React from 'react';
 import * as ReactDom from 'react-dom';

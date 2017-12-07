@@ -1,6 +1,10 @@
 import * as React from 'react';
 
-import Date from './date-fallback';
+import Date from '../date-fallback';
+
+import { dataPaths } from '../../../forms/sldata';
+
+export { dataPaths };
 
 const villages = {
   AMB: 'Ambolomailake',
@@ -15,7 +19,7 @@ export const SLData = ({ onChange, value }) => (
     <label>
       What village is the data for?
       <div className="select">
-        <select name="village" value={value} required>
+        <select name="village" value={value.village} required onChange={onChange}>
           <option></option>
           {Object.keys(villages).map((village) => (
             <option value={village} key={village}>
@@ -27,7 +31,7 @@ export const SLData = ({ onChange, value }) => (
     </label>
     <label>
       What date is the data for?
-      <Date name="date" required onChange={onChange} />
+      <Date name="date" required value={value.village} onChange={onChange} />
     </label>
   </section>
 );

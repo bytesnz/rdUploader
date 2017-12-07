@@ -1,15 +1,17 @@
 import * as React from 'react';
 
-import SLData from './sldata';
+import { SLData, dataPaths } from './types/sldata';
 
 const dataTypes = {
   catch: {
     label: 'Fisheries catch data',
-    render: SLData
+    render: SLData,
+    destination: `//data.rd/${dataPaths.catch}`
   },
   effort: {
     label: 'Fisheries effort data',
-    render: SLData
+    render: SLData,
+    destination: `//data.rd/${dataPaths.effort}`
   }
 };
 
@@ -23,7 +25,7 @@ export class UploadForm extends React.Component {
 
     // Check for name in local storage
     if (window.localStorage) {
-      this.state.name = localStorage.getItem('name');
+      this.state.name = localStorage.getItem('name') || '';
     }
 
     this.updateUploadType = this.updateUploadType.bind(this);
@@ -72,7 +74,7 @@ export class UploadForm extends React.Component {
         <label>
           What's your name?
           <input type="text" name="name" onChange={this.handleChange} pattern="[A-Z][-a-zA-Z]+ [A-Z]" value={this.state.name} required />
-          <span>First name and first letter of last name</span>
+          <span>Enter your first name and the first letter of your last name</span>
         </label>
         <label>
           What type of data are you uploading?
@@ -87,11 +89,16 @@ export class UploadForm extends React.Component {
             </select>
           </div>
         </label>
-        {this.renderForm()}
+        {this.state.type ? React.createElement(dataTypes[this.state.type].render, {
+          onChange: this.handleChange.bind(this),
+          value: this.state
+        }) : null}
         <label>
           Choose the file to upload
-          <input type="file" name="file" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; charset=binary" required />
+          <input type="file" name="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet; charset=binary" required />
+          <span>The file must be in the Microsoft Excel 2007+ format (.xlsx)</span>
         </label>
+        <input type="hidden" name="destination" value={this.state.type ? dataTypes[this.state.type].destination : ''} />
         <input type="submit" value="Upload" />
       </form>
     );

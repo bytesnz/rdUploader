@@ -1,5 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
+import * as moment from 'moment';
 
 import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
@@ -14,6 +15,7 @@ export class Date extends React.Component {
     };
 
     this.handleFallbackChange = this.handleFallbackChange.bind(this);
+    this.handleChange = this.handleChange.bind(this);
   }
 
   handleFallbackChange(date) {
@@ -29,18 +31,38 @@ export class Date extends React.Component {
           name: this.props.name,
           validity: {
             valid: date.isValid()
-          }
+          },
+          value: date
         }
       });
     }
+  }
 
-    console.log('caught event', date, ReactDOM.findDOMNode(this));
+  handleChange(event) {
+    const target = event.target;
+    const date = moment(target.value);
+
+    this.setState({
+      value: date
+    });
+
+    if (this.props.onChange) {
+      this.props.onChange({
+        target: {
+          type: 'date',
+          name: target.name,
+          validity: {
+            valid: date.isValid()
+          },
+          value: date
+        }
+      });
+    }
   }
 
   componentDidMount() {
     const domNode = ReactDOM.findDOMNode(this);
 
-    console.log('domNode is', domNode);
     if (domNode.type !== 'date') {
       this.setState({
         fallback: true
@@ -63,8 +85,8 @@ export class Date extends React.Component {
         <input
             type="date"
             name={this.props.name}
-            value={this.state.value && this.state.value.format('YYYY-MM-DD')
-            onChange={this.handleFallbackChange}
+            value={this.state.value ? this.state.value.format('YYYY-MM-DD') : ''}
+            onChange={this.handleChange}
             required={this.props.required} />
       );
     }
